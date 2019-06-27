@@ -44,23 +44,31 @@ class BookTableViewController: UITableViewController {
         return cell
     }
     
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if (editingStyle == .delete) {
+            books.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+        }
+    }
+    
     // MARK: - Navigation
     
-    @IBAction func prepareForUnwind(segue: UIStoryboardSegue) {
-        guard let source = segue.source as? BookFormViewController,
-            let book = source.book else {return}
-        
+    @IBAction func prepareForUnwindToBookList(segue: UIStoryboardSegue) {
+        print("segue called")
+        guard let source = segue.source as? BookFormTableViewController, let book = source.book else {return}
         if let indexPath = tableView.indexPathForSelectedRow {
-            books.remove(at: indexPath.row)
-            books.insert(book, at: indexPath.row)
-            tableView.deselectRow(at: indexPath, animated: true)
+            books[indexPath.row] = book
+            tableView.reloadRows(at: [indexPath], with: .none)
         } else {
+            let newIndexPath = IndexPath(row: books.count, section: 0)
             books.append(book)
+            tableView.insertRows(at: [newIndexPath], with: .automatic)
         }
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard let bookFormViewController = segue.destination as? BookFormViewController else {return}
+        guard let bookFormViewController = segue.destination as? BookFormTableViewController else {return}
         
         if let indexPath = tableView.indexPathForSelectedRow,
             segue.identifier == PropertyKeys.editBookSegue {
