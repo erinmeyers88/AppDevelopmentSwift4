@@ -8,12 +8,31 @@
 
 import UIKit
 
-class AddRegistrationTableViewController: UITableViewController {
+class AddRegistrationTableViewController: UITableViewController, SelectRoomTypeTableViewControllerDelegate {
 
     @IBOutlet weak var checkInDateLabel: UILabel!
     @IBOutlet weak var checkInDatePicker: UIDatePicker!
     @IBOutlet weak var checkOutDateLabel: UILabel!
     @IBOutlet weak var checkOutDatePicker: UIDatePicker!
+    @IBOutlet weak var firstNameTextField: UITextField!
+    @IBOutlet weak var lastNameTextField: UITextField!
+    @IBOutlet weak var emailTextField: UITextField!
+    @IBOutlet weak var numberOfAdultsLabel: UILabel!
+    @IBOutlet weak var numberOfAdultsStepper: UIStepper!
+    @IBOutlet weak var numberOfChildrenLabel: UILabel!
+    @IBOutlet weak var numberOfChildrenStepper: UIStepper!
+    @IBOutlet weak var wifiSwitch: UISwitch!
+    @IBOutlet weak var roomTypeLabel: UILabel!
+    @IBOutlet weak var doneButton: UIBarButtonItem!
+    
+    var selectedRegistration: Registration?
+    
+    @IBAction func cancelButtonTapped(_ sender: Any) {
+        dismiss(animated: true, completion: nil)
+    }
+    
+    var roomType: RoomType?
+ 
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,28 +41,53 @@ class AddRegistrationTableViewController: UITableViewController {
         checkInDatePicker.minimumDate = midnightToday
         checkInDatePicker.date = midnightToday
         
-        updateDateViews()
-    }
-    @IBOutlet weak var firstNameTextField: UITextField!
-    @IBOutlet weak var lastNameTextField: UITextField!
-    @IBOutlet weak var emailTextField: UITextField!
-    
-    @IBAction func doneBarButtonTapped(_ sender: UIBarButtonItem) {
-        let firstName = firstNameTextField.text ?? ""
-        let lastName = lastNameTextField.text ?? ""
-        let email = emailTextField.text ?? ""
-        let checkInDate = checkInDatePicker.date
-        let checkOutDate = checkOutDatePicker.date
+           loadSelectedRegistration()
         
-        print("DONE TAPPED")
-        print("firstName: \(firstName)")
-        print("lastName: \(lastName)")
-        print("email: \(email)")
-        print("checkIn: \(checkInDate)")
-        print("checkOut: \(checkOutDate)")
+        updateDateViews()
+        updateNumberOfGuests()
+        updateRoomType()
+        updateDoneButton()
     }
     
    
+    
+    func loadSelectedRegistration() {
+        if let firstName = selectedRegistration?.firstName {
+            firstNameTextField?.text = firstName
+        }
+        if let lastName = selectedRegistration?.lastName  {
+            lastNameTextField.text = lastName
+        }
+        
+        if let email = selectedRegistration?.emailAddress {
+            emailTextField.text = email
+        }
+
+        if let checkInDate = selectedRegistration?.checkInDate {
+            checkInDatePicker.date = checkInDate
+        }
+
+        if let checkOutDate = selectedRegistration?.checkOutDate {
+            checkOutDatePicker.date = checkOutDate
+        }
+
+        if let adults = selectedRegistration?.numberOfAdults {
+            numberOfAdultsStepper.value = Double(adults)
+        }
+
+        if let children = selectedRegistration?.numberOfChildren {
+            numberOfChildrenStepper.value = Double(children)
+        }
+
+        if let wifi = selectedRegistration?.wifi {
+            wifiSwitch.isOn = wifi
+        }
+        
+        if let selectedRoomType = selectedRegistration?.roomType {
+            roomType = selectedRoomType
+        }
+        
+    }
     
     func updateDateViews() {
         
@@ -59,6 +103,8 @@ class AddRegistrationTableViewController: UITableViewController {
         
         checkOutDateLabel.text = dateFormatter.string(from:
             checkOutDatePicker.date)
+        
+        updateDoneButton()
         
     }
     
@@ -143,6 +189,65 @@ class AddRegistrationTableViewController: UITableViewController {
         default:
             break
         }
+    }
+    
+    func updateNumberOfGuests() {
+        numberOfAdultsLabel.text = "\(Int(numberOfAdultsStepper.value))"
+        numberOfChildrenLabel.text = "\(Int(numberOfChildrenStepper.value))"
+        updateDoneButton()
+    }
+    
+    @IBAction func stepperValueChanged(_ sender: UIStepper) {
+        updateNumberOfGuests()
+    }
+    
+    @IBAction func wifiSwitchChanged(_ sender: UISwitch) {
+        
+    }
+    
+    func updateRoomType() {
+        if let roomType = roomType {
+            roomTypeLabel.text = roomType.name
+        } else {
+            roomTypeLabel.text = "Not Set"
+        }
+        updateDoneButton()
+    }
+    
+    func didSelect(roomType: RoomType) {
+        self.roomType = roomType
+        updateRoomType()
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "SelectRoomType" {
+        let destinationViewController = segue.destination as? SelectRoomTypeTableViewController
+        destinationViewController?.delegate = self
+        destinationViewController?.roomType = roomType
+        }
+    }
+    
+    func updateDoneButton() {
+     doneButton.isEnabled = self.registration != nil
+    }
+    
+    var registration: Registration? {
+        
+        guard let roomType = roomType else {return nil}
+        
+        let firstName = firstNameTextField.text ?? ""
+        let lastName = lastNameTextField.text ?? ""
+        let email = emailTextField.text ?? ""
+        let checkInDate = checkInDatePicker.date
+        let checkOutDate = checkOutDatePicker.date
+        let numberOfAdults = Int(numberOfAdultsStepper.value)
+        let numberOfChildren = Int(numberOfChildrenStepper.value)
+        let hasWifi = wifiSwitch.isOn
+        
+        
+        
+        return Registration(firstName: firstName, lastName: lastName, emailAddress: email, checkInDate: checkInDate, checkOutDate: checkOutDate, numberOfAdults: numberOfAdults, numberOfChildren: numberOfChildren, roomType: roomType, wifi: hasWifi)
+    
     }
     
 }
