@@ -43,7 +43,7 @@ struct PhotoInfo: Codable {
 
 
 
-func fetchPhotoInfo (completion: @escaping (PhotoInfo) -> Void) {
+func fetchPhotoInfo (completion: @escaping (PhotoInfo?) -> Void) {
     let baseUrl = URL(string: "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY")!
     
     let query: [String: String] = [
