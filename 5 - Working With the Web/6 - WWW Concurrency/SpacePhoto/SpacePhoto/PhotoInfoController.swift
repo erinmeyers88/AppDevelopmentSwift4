@@ -32,4 +32,6 @@ struct PhotoInfoController {
         }
         task.resume()
     }
+    
+    
 }
